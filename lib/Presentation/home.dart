@@ -40,36 +40,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF1A1A2E),
       appBar: AppBar(
-        title: const Text("Chats"),
+        title: const Text(
+          "JustChat",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        backgroundColor: Color.fromARGB(255, 19, 19, 31),
         actions: [
-          StreamBuilder<DocumentSnapshot>(
-            stream: _firestore
-                .collection('users')
-                .doc(_auth.currentUser!.uid)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const SizedBox();
-              final user = snapshot.data!.data() as Map<String, dynamic>;
-
-              return IconButton(
-                icon: CircleAvatar(
-                  backgroundImage: user['photoUrl'] != ''
-                      ? NetworkImage(user['photoUrl'])
-                      : null,
-                  child: user['photoUrl'] == '' ? Text(user['name'][0]) : null,
-                ),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: Text(user['name']),
-                      content: Text(user['email']),
-                    ),
-                  );
-                },
-              );
-            },
+          Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: Icon(Icons.camera_alt, color: Colors.white),
           ),
         ],
       ),
@@ -80,10 +61,14 @@ class _HomeScreenState extends State<HomeScreen> {
             .orderBy('updatedAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData)
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
+          }
+          ;
           final threads = snapshot.data!.docs;
-          if (threads.isEmpty) return const Center(child: Text('No chats yet'));
+          if (threads.isEmpty) {
+            return const Center(child: Text('No chats yet'));
+          }
           return ListView.builder(
             itemCount: threads.length,
             itemBuilder: (context, index) {
@@ -92,22 +77,34 @@ class _HomeScreenState extends State<HomeScreen> {
               final title = doc['title'] ?? 'Chat';
               final lastMsg = doc['lastMessage'] ?? '';
               final updatedAt = doc['updatedAt'];
+              // final photourl = doc['imageUrl'];
               return ListTile(
-                title: Text(title),
+                leading: CircleAvatar(
+                  backgroundImage: NetworkImage(
+                    doc['photoUrl'] ??
+                        'https://ui-avatars.com/api/?name=${Uri.encodeComponent(title)}',
+                  ),
+                ),
+                title: Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 subtitle: Text(
                   lastMsg,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
                 trailing: Text(
                   updatedAt == null
                       ? ''
                       : (updatedAt as Timestamp).toDate().toLocal().toString(),
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
                 onTap: () {
-                  if (kDebugMode) {
-                    print("THREAD ID : $threadId");
-                  }
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -136,27 +133,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _createThread() async {
     final uid = _auth.currentUser!.uid;
+
+    // fetch user name & photo from users collection
+    final userDoc = await _firestore.collection('users').doc(uid).get();
+    final userName = userDoc.data()?['name'] ?? 'Unknown User';
+    final photoUrl = userDoc.data()?['photoUrl'];
+
+    // create thread with user info
     final docRef = await _firestore.collection('threads').add({
-      'title': 'New Chat',
+      'title': userName,
       'createdBy': uid,
+      'photoUrl': photoUrl,
       'updatedAt': FieldValue.serverTimestamp(),
       'lastMessage': '',
     });
 
-    if (kDebugMode) {
-      print('USER ID : $uid');
-    }
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (_) =>
-    //         ChatScreen(threadId: docRef.id, threadTitle: 'New Chat'),
-    //   ),
-    // );
-
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ProfileSetupScreen(uid: uid)),
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(threadId: docRef.id, threadTitle: userName),
+      ),
     );
   }
 }

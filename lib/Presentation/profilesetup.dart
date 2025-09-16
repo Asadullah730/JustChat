@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:chat_application/Presentation/home.dart';
+import 'package:chat_application/Services/supabaseServices/storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,6 +18,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final _name = TextEditingController();
   File? _image;
   bool _saving = false;
+  bool isProfileSetup = false;
 
   Future<void> _pickImage() async {
     final p = ImagePicker();
@@ -30,18 +32,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    String photoUrl = '';
+    String? photoUrl;
     if (_image != null) {
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('user_photos')
-          .child('${widget.uid}.jpg');
-      await ref.putFile(_image!);
-      photoUrl = await ref.getDownloadURL();
+      photoUrl = await SupabaseService().uploadImageToSupabase(_image!);
+      isProfileSetup = true;
+      print('IMAGE UPLOAD INTO SUPABASE STORAGE : $photoUrl');
     }
+
     await FirebaseFirestore.instance.collection('users').doc(widget.uid).set({
-      'displayName': _name.text.trim(),
+      'name': _name.text.trim(),
       'photoUrl': photoUrl,
+      'profileSetup': isProfileSetup,
     }, SetOptions(merge: true));
     if (kDebugMode) {
       print("PROFILE UPDATED : ");

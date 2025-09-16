@@ -46,7 +46,31 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: _signUp,
+                          onPressed: () async {
+                            await _auth
+                                .signUp(_email.text.trim(), _pass.text.trim())
+                                .then((cred) {
+                                  if (kDebugMode) {
+                                    print("USER CREDENTIAL : $cred");
+                                    print("USER UID : ${cred.user}");
+                                  }
+                                  // After sign up, navigate to profile setup to get displayName + photo
+
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ProfileSetupScreen(
+                                        uid: cred.user!.uid,
+                                      ),
+                                    ),
+                                  );
+                                })
+                                .onError((error, stackTrace) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error:  $error')),
+                                  );
+                                });
+                          },
                           child: const Text('Sign Up'),
                         ),
                       ),
@@ -78,9 +102,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (kDebugMode) {
         print("USER CREDENTIAL : $cred");
+        print("USER UID : ${cred.user}");
       }
       // After sign up, navigate to profile setup to get displayName + photo
-      if (cred.user != null) {
+      if (cred.user == null) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
