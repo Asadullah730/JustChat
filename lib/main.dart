@@ -1,3 +1,4 @@
+import 'package:chat_application/AI_model/helper.dart';
 import 'package:chat_application/Presentation/auth_gate.dart';
 import 'package:chat_application/Presentation/facedetection.dart';
 import 'package:chat_application/Presentation/home.dart';
@@ -8,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await TFLiteHelper.init();
   await Supabase.initialize(
     url: 'https://qnmjmhyxyyhuiyobdebk.supabase.co',
     anonKey:

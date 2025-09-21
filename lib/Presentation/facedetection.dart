@@ -26,8 +26,10 @@ class _FaceMatchScreenState extends State<FaceMatchScreen> {
     faceService.loadModel();
   }
 
-  Future<void> pickImage(int slot) async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+  Future<void> pickImage(int slot, {bool fromCamera = false}) async {
+    final pickedFile = await picker.pickImage(
+      source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+    );
     if (pickedFile == null) return;
 
     setState(() {
@@ -38,6 +40,18 @@ class _FaceMatchScreenState extends State<FaceMatchScreen> {
       }
     });
   }
+  // Future<void> pickImage(int slot) async {
+  //   final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+  //   if (pickedFile == null) return;
+
+  //   setState(() {
+  //     if (slot == 1) {
+  //       image1 = File(pickedFile.path);
+  //     } else {
+  //       image2 = File(pickedFile.path);
+  //     }
+  //   });
+  // }
 
   Future<void> compareFaces() async {
     if (image1 == null || image2 == null) return;
@@ -86,50 +100,41 @@ class _FaceMatchScreenState extends State<FaceMatchScreen> {
             Row(
               children: [
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () => pickImage(1),
-                    child: Container(
-                      height: 180,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.deepPurple),
-                        borderRadius: BorderRadius.circular(12),
-                        image: image1 != null
-                            ? DecorationImage(
-                                image: FileImage(image1!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
+                  child: Column(
+                    children: [
+                      GestureDetector(
+                        onTap: () => pickImage(1),
+                        child: _imageContainer(image1, "Gallery 1"),
                       ),
-                      child: image1 == null
-                          ? Center(child: Text("Select Image 1"))
-                          : null,
-                    ),
+                      SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        onPressed: () => pickImage(1, fromCamera: true),
+                        icon: Icon(Icons.camera_alt),
+                        label: Text("Camera 1"),
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(width: 12),
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () => pickImage(2),
-                    child: Container(
-                      height: 180,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.deepPurple),
-                        borderRadius: BorderRadius.circular(12),
-                        image: image2 != null
-                            ? DecorationImage(
-                                image: FileImage(image2!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
+                  child: Column(
+                    children: [
+                      GestureDetector(
+                        onTap: () => pickImage(2),
+                        child: _imageContainer(image2, "Gallery 2"),
                       ),
-                      child: image2 == null
-                          ? Center(child: Text("Select Image 2"))
-                          : null,
-                    ),
+                      SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        onPressed: () => pickImage(2, fromCamera: true),
+                        icon: Icon(Icons.camera_alt),
+                        label: Text("Camera 2"),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
+
             SizedBox(height: 20),
             ElevatedButton.icon(
               icon: Icon(Icons.face_retouching_natural),
@@ -169,4 +174,18 @@ class _FaceMatchScreenState extends State<FaceMatchScreen> {
       ),
     );
   }
+}
+
+Widget _imageContainer(File? imgFile, String label) {
+  return Container(
+    height: 180,
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.deepPurple),
+      borderRadius: BorderRadius.circular(12),
+      image: imgFile != null
+          ? DecorationImage(image: FileImage(imgFile), fit: BoxFit.cover)
+          : null,
+    ),
+    child: imgFile == null ? Center(child: Text(label)) : null,
+  );
 }

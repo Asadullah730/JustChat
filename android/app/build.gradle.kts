@@ -40,6 +40,11 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    aaptOptions {
+        // Prevent compression of TFLite models
+        noCompress += listOf("tflite", "lite")
+    }
 }
 
 flutter {
