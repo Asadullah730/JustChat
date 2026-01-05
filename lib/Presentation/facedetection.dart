@@ -40,18 +40,6 @@ class _FaceMatchScreenState extends State<FaceMatchScreen> {
       }
     });
   }
-  // Future<void> pickImage(int slot) async {
-  //   final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-  //   if (pickedFile == null) return;
-
-  //   setState(() {
-  //     if (slot == 1) {
-  //       image1 = File(pickedFile.path);
-  //     } else {
-  //       image2 = File(pickedFile.path);
-  //     }
-  //   });
-  // }
 
   Future<void> compareFaces() async {
     if (image1 == null || image2 == null) return;
